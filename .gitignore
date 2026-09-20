@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Test results & reports
+test-results/
+playwright-report/
+blob-report/
+
+# OS & Editor files
+.DS_Store
+*.log
