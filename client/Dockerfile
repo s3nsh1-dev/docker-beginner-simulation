@@ -1,14 +1,16 @@
-From node:24-bookworm-slim AS frontend-context
+# Stage 1 for bulding the project and later use the independent /dist folder via nginx
+From node:24-bookworm-slim AS client-build
 WORKDIR /app
-
 RUN corepack enable && corepack install --global pnpm@12.4.2
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
+RUN pnpm install --prod --frozen-lockfile
 COPY . .
-# do we really need this build folder as it just sits there if we are running the vite server not the build file ?
 RUN pnpm run build
 
-EXPOSE 5173 
 
-CMD ["pnpm", "run", "dev"]
+# Stage 2 : Now we introduce Nginx and just share the /dist folder as the context for the final image
+FROM nginx:stable-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=client-build /app/dist/ /usr/share/nginx/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
