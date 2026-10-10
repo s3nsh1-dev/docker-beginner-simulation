@@ -1,0 +1,7 @@
+name: todo-client-lab
+
+services:
+  client:
+    image: todo-client:lab
+    ports:
+      - "3000:80"

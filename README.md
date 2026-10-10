@@ -1,6 +1,12 @@
-# TaskPulse TODO Project
+### How i am running the docker Image
 
-This project is separated into two completely independent, standalone applications:
+case 1: running the server as it is but running the client build as docker container and it working.
+COMMANDS:
+docker build -t todo-client:lab ./client
+docker run --rm --name todo-client-lab -p 3000:80 todo-client:lab
+docker stop todo-client-lab
 
-- 📱 **Client (Frontend)**: [`client/README.md`](file:///home/user228/Local_Storage/development/WebDev/intentional-projects/docker-beginner-simulation/client/README.md) — React 19, Vite, Glassmorphism UI & Playwright E2E tests.
-- ⚙️ **Server (Backend)**: [`server/README.md`](file:///home/user228/Local_Storage/development/WebDev/intentional-projects/docker-beginner-simulation/server/README.md) — Express 5 REST API, Neon PostgreSQL & Integration tests.
+case 2: Server is running in terminal but this time the todo-client-lab is running via docker-compose.yml
+COMMANDS:
+docker compose -f labA-docker-compose.yml up
+docker compose -f labA-docker-compose.yml down

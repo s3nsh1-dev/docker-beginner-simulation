@@ -1,9 +1,9 @@
 # Stage 1 for bulding the project and later use the independent /dist folder via nginx
-From node:24-bookworm-slim AS client-build
+FROM node:24-bookworm-slim AS client-build
 WORKDIR /app
 RUN corepack enable && corepack install --global pnpm@12.4.2
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build
 
