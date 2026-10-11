@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Docker & AWS EC2 Roadmap</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Custom scrollbar and animations */
+    pre code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+    .diff-del {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      display: block;
+      padding: 0 4px;
+      border-left: 3px solid #ef4444;
+    }
+    .diff-add {
+      background-color: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      display: block;
+      padding: 0 4px;
+      border-left: 3px solid #22c55e;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background,#0f172a)] text-[var(--foreground,#f8fafc)] antialiased p-4 md:p-8 min-h-screen">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <header class="bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
+            <span>🐳 Docker to AWS EC2</span>
+            <span>•</span>
+            <span>Production Engineering</span>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Docker Architecture & EC2 Readiness</h1>
+          <p class="text-[var(--muted-foreground,#94a3b8)] text-sm mt-1">
+            Step-by-step master guide transforming this Todo app setup into an industry-grade, production-ready stack.
+          </p>
+        </div>
+
+        <!-- Progress Tracker -->
+        <div class="bg-[var(--content,#0f172a)] border border-[var(--border,#334155)] rounded-xl p-4 min-w-[240px]">
+          <div class="flex justify-between items-center text-xs mb-2">
+            <span class="text-[var(--muted-foreground,#94a3b8)]">Mastery Progress</span>
+            <span id="progress-percent" class="font-bold text-blue-400">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div class="text-[11px] text-[var(--muted-foreground,#94a3b8)] mt-2 flex justify-between">
+            <span id="progress-count">0 of 7 completed</span>
+            <button onclick="resetProgress()" class="text-xs text-slate-400 hover:text-white underline">Reset</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container with Tabs -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      
+      <!-- Tab Navigation Sidebar -->
+      <nav class="md:col-span-4 lg:col-span-3 space-y-2" aria-label="Topics">
+        <div class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground,#94a3b8)] px-2 mb-2">
+          Topics & Modules
+        </div>
+
+        <button onclick="switchTab(0)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-blue-500 text-blue-400 font-medium shadow-sm" data-tab="0">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-0">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">01. Blueprint</div>
+            <div class="text-sm font-semibold">EC2 Target Architecture</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(1)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="1">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-1">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">02. Security</div>
+            <div class="text-sm font-semibold">Non-Root Containers</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(2)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="2">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-2">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">03. Networking</div>
+            <div class="text-sm font-semibold">Nginx Reverse Proxy</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(3)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="3">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-3">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">04. Reliability</div>
+            <div class="text-sm font-semibold">Healthchecks & Ordering</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(4)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="4">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-4">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">05. Build Hygiene</div>
+            <div class="text-sm font-semibold">Context & .dockerignore</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(5)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="5">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-5">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">06. Lifecycle</div>
+            <div class="text-sm font-semibold">PID 1 & Graceful Stop</div>
+          </div>
+        </button>
+
+        <button onclick="switchTab(6)" class="tab-btn w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 bg-[var(--card,#1e293b)] border-[var(--border,#334155)] hover:border-slate-500 text-[var(--foreground,#f8fafc)]" data-tab="6">
+          <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-6">
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-mono">07. Production</div>
+            <div class="text-sm font-semibold">AWS EC2 Deployment</div>
+          </div>
+        </button>
+      </nav>
+
+      <!-- Tab Content Area -->
+      <main class="md:col-span-8 lg:col-span-9">
+
+        <!-- TAB 0: ARCHITECTURE BLUEPRINT -->
+        <div id="tab-content-0" class="tab-content bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 01</span>
+              <h2 class="text-xl font-bold">Dev Architecture vs. AWS EC2 Target Architecture</h2>
+            </div>
+            <button onclick="toggleCompleted(0)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              In a beginner setup, your browser talks to <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded">localhost:3000</code> for HTML/JS, and makes independent AJAX requests directly to <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded">localhost:5000</code>. On AWS EC2, <strong>this breaks completely</strong> because "localhost" inside the browser on your phone or laptop refers to your own computer, not the EC2 instance!
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+              <div class="border border-red-500/30 bg-red-950/20 p-4 rounded-xl">
+                <h3 class="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                  <span>❌ Current Beginner Flow</span>
+                </h3>
+                <ul class="space-y-2 text-xs list-disc list-inside text-slate-300">
+                  <li>Client port 3000 and Server port 5000 are both exposed to host.</li>
+                  <li>Client bundle hardcodes <code class="text-red-300">http://localhost:5000</code>.</li>
+                  <li>Requires permissive CORS (<code class="text-red-300">origin: '*'</code>).</li>
+                  <li>Docker's internal bridge network is essentially bypassed.</li>
+                </ul>
+              </div>
+
+              <div class="border border-emerald-500/30 bg-emerald-950/20 p-4 rounded-xl">
+                <h3 class="text-emerald-400 font-semibold mb-2 flex items-center gap-2">
+                  <span>✅ Industry Production Flow</span>
+                </h3>
+                <ul class="space-y-2 text-xs list-disc list-inside text-slate-300">
+                  <li><strong>Only Nginx (port 80/443)</strong> is exposed to the internet.</li>
+                  <li>Server port 5000 is <em>internal only</em> on the Docker network.</li>
+                  <li>Client requests relative path <code class="text-emerald-300">/api/todos</code>; Nginx reverse proxies it.</li>
+                  <li>No CORS headaches, unified SSL termination, single domain.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Visual Diagram -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+              <div class="text-xs font-mono text-slate-400 mb-2">TARGET EC2 ARCHITECTURE FLOW:</div>
+              <div class="text-xs font-mono text-emerald-400 whitespace-pre overflow-x-auto p-2">
+[Browser / User]
+       │
+       ▼ (HTTPS :443 / HTTP :80)
+┌────────────────────────────────────────────────────────┐
+│ AWS EC2 Host                                           │
+│   ┌────────────────────────────────────────────────┐   │
+│   │ Nginx (Client Container)                       │   │
+│   │   ├── Serves React Static Bundle (/dist)       │   │
+│   │   └── Reverse Proxies /api/* ─────────────────┐│   │
+│   └───────────────────────────────────────────────│┘   │
+│                                                   ▼    │
+│   ┌────────────────────────────────────────────────┐   │
+│   │ Express API Container (Port 5000, Internal)    │   │
+│   └───────────────────────┬────────────────────────┘   │
+└───────────────────────────┼────────────────────────────┘
+                            ▼ (SSL Connection)
+                  [Neon PostgreSQL Database]
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 1: NON-ROOT CONTAINER -->
+        <div id="tab-content-1" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 02</span>
+              <h2 class="text-xl font-bold">Security: Running as Non-Root User</h2>
+            </div>
+            <button onclick="toggleCompleted(1)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <div class="bg-amber-500/10 border-l-4 border-amber-500 p-3 rounded text-xs text-amber-200">
+              <strong>The Security Risk:</strong> By default, Docker containers execute processes as <code class="font-mono font-bold">root</code> (UID 0). If an attacker finds a remote code execution vulnerability in an Express dependency, they acquire root privileges inside the container, increasing the risk of container escape onto the EC2 host kernel.
+            </div>
+
+            <h3 class="font-semibold text-slate-100">Fix for <code class="text-blue-400">server/Dockerfile</code>:</h3>
+            <p class="text-xs text-slate-400">
+              The official Node images provide an unprivileged user named <code class="text-emerald-300 font-mono">node</code>. Transfer ownership of files and set <code class="text-emerald-300 font-mono">USER node</code>.
+            </p>
+
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              <span class="text-slate-500"># ── Stage 2: Production runtime ─────────────────</span>
+              <br>FROM node:24-bookworm-slim
+              <br>WORKDIR /app
+              <br>ENV NODE_ENV=production
+              <br>
+              <br><span class="text-slate-500"># Install production dependencies</span>
+              <br>RUN corepack enable && corepack install --global pnpm@12.4.2
+              <br>COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+              <br>RUN pnpm install --frozen-lockfile --prod
+              <br>
+              <br>COPY --from=build /app/dist ./dist
+              <br>
+              <span class="diff-add">+ # Ensure non-root node user owns application files</span>
+              <span class="diff-add">+ RUN chown -R node:node /app</span>
+              <span class="diff-add">+ USER node</span>
+              <br>EXPOSE 5000
+              <br>CMD ["node", "dist/index.js"]
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: NGINX REVERSE PROXY -->
+        <div id="tab-content-2" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 03</span>
+              <h2 class="text-xl font-bold">Networking: Nginx Reverse Proxy & Unifying Ports</h2>
+            </div>
+            <button onclick="toggleCompleted(2)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              Right now, your client calls <code class="text-red-400 font-mono">http://localhost:5000/api/todos</code>. To make this production-ready:
+            </p>
+            <ol class="list-decimal list-inside space-y-1 text-xs text-slate-300">
+              <li>Configure Nginx to proxy any request starting with <code class="text-emerald-300 font-mono">/api/</code> to the Docker internal service <code class="text-emerald-300 font-mono">http://server:5000</code>.</li>
+              <li>Change client's API base to relative path <code class="text-emerald-300 font-mono">/api/todos</code>.</li>
+              <li>Stop publishing port 5000 to the public host in Docker Compose.</li>
+            </ol>
+
+            <h3 class="font-semibold text-slate-100 text-xs">1. Update <code class="text-blue-400">client/nginx.conf</code>:</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              server {
+              <br>&nbsp;&nbsp;listen 80;
+              <br>&nbsp;&nbsp;server_name _;
+              <br>&nbsp;&nbsp;root /usr/share/nginx/html;
+              <br>&nbsp;&nbsp;index index.html;
+              <br>
+              <span class="diff-add">+&nbsp;&nbsp;# Forward /api/ requests to Express backend</span>
+              <span class="diff-add">+&nbsp;&nbsp;location /api/ {</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_pass http://server:5000;</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_http_version 1.1;</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header Host $host;</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Real-IP $remote_addr;</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Forwarded-Proto $scheme;</span>
+              <span class="diff-add">+&nbsp;&nbsp;}</span>
+              <br>&nbsp;&nbsp;location / {
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;try_files $uri $uri/ /index.html;
+              <br>&nbsp;&nbsp;}
+              <br>}
+            </div>
+
+            <h3 class="font-semibold text-slate-100 text-xs">2. Update <code class="text-blue-400">client/src/services/api.ts</code>:</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              <span class="diff-del">- const API_BASE = 'http://localhost:5000/api/todos';</span>
+              <span class="diff-add">+ const API_BASE = '/api/todos';</span>
+            </div>
+
+            <h3 class="font-semibold text-slate-100 text-xs">3. Remove public port in <code class="text-blue-400">docker-compose.yml</code>:</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              &nbsp;&nbsp;server:
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./server
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;restart: unless-stopped
+              <span class="diff-del">-&nbsp;&nbsp;&nbsp;&nbsp;ports:</span>
+              <span class="diff-del">-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "5000:5000"</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;expose:</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "5000" # Available only to other containers in the same network</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: HEALTHCHECKS & ORCHESTRATION -->
+        <div id="tab-content-3" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 04</span>
+              <h2 class="text-xl font-bold">Reliability: Healthchecks & Startup Dependency</h2>
+            </div>
+            <button onclick="toggleCompleted(3)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              In your current compose file, <code class="text-amber-300 font-mono">depends_on: [server]</code> only guarantees that Docker initiates the container process. It does <strong>not</strong> wait until Node has initialized or connected to PostgreSQL!
+            </p>
+            <p class="text-xs text-slate-400">
+              Your server already has a health endpoint at <code class="text-emerald-400 font-mono">/api/health</code>. Wire it into Docker Compose using the built-in Node 18+ global fetch:
+            </p>
+
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              services:
+              <br>&nbsp;&nbsp;server:
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./server
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;env_file:
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- ./server/.env
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;healthcheck:</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;interval: 10s</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;timeout: 5s</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;retries: 3</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;start_period: 15s</span>
+              <br>
+              <br>&nbsp;&nbsp;client:
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./client
+              <span class="diff-del">-&nbsp;&nbsp;&nbsp;&nbsp;depends_on: [server]</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;depends_on:</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;server:</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;condition: service_healthy</span>
+            </div>
+
+            <div class="p-3 bg-blue-950/30 border border-blue-800 rounded-xl text-xs text-blue-200">
+              💡 <strong>Why Node Fetch?</strong> Minimal images like <code class="font-mono">node:*-slim</code> do not have <code class="font-mono">curl</code> or <code class="font-mono">wget</code> installed. Calling <code class="font-mono">node -e "fetch(...)"</code> leverages Node.js without needing extra apk/apt dependencies!
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: BUILD HYGIENE & DOCKERIGNORE -->
+        <div id="tab-content-4" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 05</span>
+              <h2 class="text-xl font-bold">Build Hygiene: Build Context & .dockerignore</h2>
+            </div>
+            <button onclick="toggleCompleted(4)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              When running <code class="text-amber-300 font-mono">docker build</code>, the entire directory is packaged and sent as the <em>Build Context</em> to the Docker daemon.
+            </p>
+            <div class="bg-red-950/20 border border-red-500/30 p-3 rounded text-xs text-red-200">
+              <strong>Found Issue:</strong> <code class="font-mono text-red-300">server/.dockerignore</code> is missing <code class="font-mono text-red-300">dist/</code>!
+              If you run a local build test on your host machine, host <code class="font-mono">dist/</code> files get sent to Docker and copied during <code class="font-mono">COPY . .</code>.
+            </div>
+
+            <h3 class="font-semibold text-slate-100 text-xs">Fix <code class="text-blue-400">server/.dockerignore</code>:</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              node_modules/
+              <span class="diff-add">+ dist/</span>
+              <br>.env
+              <br>.env.*
+              <br>.git/
+              <span class="diff-add">+ *.log</span>
+            </div>
+
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 space-y-1">
+              <span class="font-semibold text-white">Why this matters for AWS EC2:</span>
+              <p>Smaller build contexts mean faster Git pulls, faster CI/CD pipelines, and zero risk of stale local JavaScript overwriting container TypeScript outputs.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: PID 1 & GRACEFUL SHUTDOWN -->
+        <div id="tab-content-5" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 06</span>
+              <h2 class="text-xl font-bold">Container Lifecycle: PID 1 & Graceful Shutdown</h2>
+            </div>
+            <button onclick="toggleCompleted(5)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              In Linux, the process with <strong>Process ID 1 (PID 1)</strong> has special responsibilities: reaping zombie processes and handling system signals like <code class="text-amber-300 font-mono">SIGTERM</code> and <code class="text-amber-300 font-mono">SIGINT</code>.
+            </p>
+            <p class="text-xs text-slate-400">
+              Node.js was not designed to run as PID 1. By default, it ignores <code class="font-mono text-red-300">SIGTERM</code>. When you run <code class="font-mono">docker stop</code> or restart services on EC2, Docker waits 10 seconds, times out, and forcefully kills Node with <code class="font-mono text-red-300">SIGKILL</code>, risking in-flight database transaction corruption!
+            </p>
+
+            <h3 class="font-semibold text-slate-100 text-xs">Solution: Use Docker's built-in init system (Tini)</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              services:
+              <br>&nbsp;&nbsp;server:
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./server
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;init: true # Uses tini as PID 1 to reap zombies and forward signals</span>
+            </div>
+
+            <h3 class="font-semibold text-slate-100 text-xs mt-4">Handle SIGTERM in <code class="text-blue-400">server/src/index.ts</code>:</h3>
+            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
+              <span class="diff-add">+ const server = app.listen(PORT, () => ...);</span>
+              <br>
+              <span class="diff-add">+ process.on('SIGTERM', async () => {</span>
+              <span class="diff-add">+&nbsp;&nbsp;console.log('SIGTERM received. Shutting down gracefully...');</span>
+              <span class="diff-add">+&nbsp;&nbsp;server.close(async () => {</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;await pool.end();</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;process.exit(0);</span>
+              <span class="diff-add">+&nbsp;&nbsp;});</span>
+              <span class="diff-add">+ });</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: AWS EC2 DEPLOYMENT CHECKLIST -->
+        <div id="tab-content-6" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div>
+              <span class="text-xs font-mono text-blue-400">MODULE 07</span>
+              <h2 class="text-xl font-bold">AWS EC2 Production Deployment Checklist</h2>
+            </div>
+            <button onclick="toggleCompleted(6)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
+              Mark Completed
+            </button>
+          </div>
+
+          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
+            <p>
+              When taking this containerized stack onto an <strong>AWS EC2 instance</strong> (e.g. t3.micro or t4g.small), adhere to these battle-tested standards:
+            </p>
+
+            <div class="space-y-3">
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                <span class="font-semibold text-white text-xs block mb-1">1. EC2 Security Group (Firewall) Rules</span>
+                <p class="text-xs text-slate-400">
+                  Only allow inbound traffic on:
+                  <br>• <strong>Port 22 (SSH):</strong> Restricted to your IP address only.
+                  <br>• <strong>Port 80 (HTTP) & 443 (HTTPS):</strong> Open to 0.0.0.0/0.
+                  <br>• <strong>NEVER expose Port 5000:</strong> The Express API should only be reached via internal container network.
+                </p>
+              </div>
+
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                <span class="font-semibold text-white text-xs block mb-1">2. Docker Log Rotation (Prevent Disk Fill)</span>
+                <p class="text-xs text-slate-400">
+                  On EC2, containers that run for months will fill up your EBS volume with logs if unconfigured. Add log rotation to <code class="font-mono text-emerald-400">docker-compose.yml</code>:
+                </p>
+                <div class="bg-slate-950 p-2 mt-2 rounded border border-slate-800 font-mono text-xs text-slate-300">
+                  logging:
+                  <br>&nbsp;&nbsp;driver: "json-file"
+                  <br>&nbsp;&nbsp;options:
+                  <br>&nbsp;&nbsp;&nbsp;&nbsp;max-size: "10m"
+                  <br>&nbsp;&nbsp;&nbsp;&nbsp;max-file: "3"
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                <span class="font-semibold text-white text-xs block mb-1">3. Secrets & Environment Variables on EC2</span>
+                <p class="text-xs text-slate-400">
+                  Never commit <code class="font-mono">.env</code> to GitHub. On EC2:
+                  <br>• Create <code class="font-mono">/home/ubuntu/app/server/.env</code> directly on the server, or pull it using AWS Systems Manager (SSM) Parameter Store.
+                  <br>• Set permissions: <code class="font-mono bg-slate-800 px-1 py-0.5 rounded text-amber-300">chmod 600 server/.env</code> so only your user can read database credentials.
+                </p>
+              </div>
+
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                <span class="font-semibold text-white text-xs block mb-1">4. SSL / HTTPS Setup</span>
+                <p class="text-xs text-slate-400">
+                  Attach an Elastic IP to your EC2 instance and point your domain (via Route53/Cloudflare). Run Certbot with Nginx to obtain a free Let's Encrypt certificate, or place an AWS Application Load Balancer (ALB) with AWS Certificate Manager in front.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-[var(--muted-foreground,#94a3b8)] pt-4 border-t border-[var(--border,#334155)]">
+      Built for intentional learning • Docker Production Best Practices Guide
+    </footer>
+
+  </div>
+
+  <script>
+    // Tab switching logic
+    function switchTab(index) {
+      const contents = document.querySelectorAll('.tab-content');
+      const buttons = document.querySelectorAll('.tab-btn');
+
+      contents.forEach((content, i) => {
+        if (i === index) {
+          content.classList.remove('hidden');
+        } else {
+          content.classList.add('hidden');
+        }
+      });
+
+      buttons.forEach((btn, i) => {
+        if (i === index) {
+          btn.classList.add('border-blue-500', 'text-blue-400', 'font-medium', 'shadow-sm');
+          btn.classList.remove('border-[var(--border,#334155)]', 'hover:border-slate-500', 'text-[var(--foreground,#f8fafc)]');
+        } else {
+          btn.classList.remove('border-blue-500', 'text-blue-400', 'font-medium', 'shadow-sm');
+          btn.classList.add('border-[var(--border,#334155)]', 'hover:border-slate-500', 'text-[var(--foreground,#f8fafc)]');
+        }
+      });
+    }
+
+    // Progress tracking logic using localStorage
+    const STORAGE_KEY = 'docker_prod_guide_completed';
+    let completed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    function updateProgressUI() {
+      const total = 7;
+      const count = completed.length;
+      const pct = Math.round((count / total) * 100);
+
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-percent').innerText = pct + '%';
+      document.getElementById('progress-count').innerText = `${count} of ${total} completed`;
+
+      for (let i = 0; i < total; i++) {
+        const chk = document.getElementById(`chk-${i}`);
+        if (chk) {
+          chk.checked = completed.includes(i);
+        }
+        const btn = document.querySelector(`#tab-content-${i} .mark-btn`);
+        if (btn) {
+          if (completed.includes(i)) {
+            btn.innerText = '✓ Completed';
+            btn.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500');
+            btn.classList.remove('border-slate-600');
+          } else {
+            btn.innerText = 'Mark Completed';
+            btn.classList.remove('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500');
+            btn.classList.add('border-slate-600');
+          }
+        }
+      }
+    }
+
+    function toggleCompleted(index) {
+      if (completed.includes(index)) {
+        completed = completed.filter(i => i !== index);
+      } else {
+        completed.push(index);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(completed));
+      updateProgressUI();
+    }
+
+    function resetProgress() {
+      completed = [];
+      localStorage.removeItem(STORAGE_KEY);
+      updateProgressUI();
+    }
+
+    // Initialize UI
+    updateProgressUI();
+  </script>
+</body>
+</html>
