@@ -10,3 +10,19 @@ case 2: Server is running in terminal but this time the todo-client-lab is runni
 COMMANDS:
 docker compose -f labA-docker-compose.yml up
 docker compose -f labA-docker-compose.yml down
+
+case 3: Client is running in terminal (or stopped) and server runs as a standalone docker container
+COMMANDS:
+docker build -t todo-server:lab ./server
+docker run --rm --name todo-server-lab -p 5000:5000 --env-file ./server/.env -e PORT=5000 todo-server:lab
+docker stop todo-server-lab
+
+case 4: Server runs via isolated docker-compose
+COMMANDS:
+docker compose -f labB-docker-compose.yml up
+docker compose -f labB-docker-compose.yml down
+
+case 5: Full Stack Orchestration (Client + Server both running in containers)
+COMMANDS:
+docker compose up --build
+docker compose down
