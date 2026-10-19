@@ -13,8 +13,11 @@ services:
 
   server:
     build: ./server
-    env_file:
-      - ./server/.env
+    environment:
+      DATABASE_URL: postgres://test_user:test_password@test-db:5432/todo_test_db
+    depends_on:
+      test-db:
+        condition: service_healthy
     restart: unless-stopped
     expose:
       - "5000"
@@ -40,7 +43,7 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: todo_test_db
     ports:
-      # Map to custom host port 5433 to avoid clashing with local Postgres (5432)
+      # Map to custom host port 5434 to avoid clashing with local Postgres (5432)
       - "5433:5432"
     # In-memory tmpfs makes tests 5x faster and leaves no disk artifacts
     tmpfs:
