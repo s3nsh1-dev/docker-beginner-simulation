@@ -7,7 +7,7 @@ services:
     depends_on:
       server:
         condition: service_healthy
-    restart: unless-stopped
+    # restart: unless-stopped
     ports:
       - "3000:80"
 
@@ -18,7 +18,7 @@ services:
     depends_on:
       test-db:
         condition: service_healthy
-    restart: unless-stopped
+    # restart: unless-stopped
     expose:
       - "5000"
     healthcheck:

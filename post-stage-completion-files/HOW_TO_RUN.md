@@ -26,3 +26,8 @@ case 5: Full Stack Orchestration (Client + Server both running in containers)
 COMMANDS:
 docker compose up --build
 docker compose down
+
+Case 6: When testing the app without touching the NEON db but postgres-alpine image. -v is to scrap old and use new volume every time
+COMMANDS:
+docker compose -f docker-compose.test.yml up -d --wait
+docker compose -f docker-compose.test.yml down -v
