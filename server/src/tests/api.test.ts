@@ -1,45 +1,68 @@
-import { initDb } from '../config/db.js';
-import { TodoModel } from '../models/todoModel.js';
+import assert from "node:assert/strict";
+import { initDb } from "../config/db.js";
+import { TodoModel } from "../models/todoModel.js";
 
 async function runServerTests() {
-  console.log('🧪 Starting Server Integration Tests...');
+  console.log(
+    "Starting server integration tests against the disposable database...",
+  );
+
+  let createdId: number | undefined;
+  let failed = false;
 
   try {
     await initDb();
 
-    // 1. Create Todo Test
+    // 1. Create
     const title = `Test Todo ${Date.now()}`;
     const newTodo = await TodoModel.create({
       title,
-      description: 'Server test description',
-      priority: 'high',
-      category: 'work',
+      description: "Server test description",
+      priority: "high",
+      category: "work",
     });
-    console.assert(newTodo.title === title, '❌ Test Failed: Todo title mismatch');
-    console.assert(newTodo.priority === 'high', '❌ Test Failed: Todo priority mismatch');
-    console.log('✅ PASS: Create Todo Model Test');
+    createdId = newTodo.id;
+    assert.equal(newTodo.title, title, "Todo title mismatch after create");
+    assert.equal(
+      newTodo.priority,
+      "high",
+      "Todo priority mismatch after create",
+    );
+    console.log("PASS: create todo");
 
-    // 2. Fetch Stats Test
+    // 2. Stats
     const stats = await TodoModel.getStats();
-    console.assert(typeof stats.total === 'number', '❌ Test Failed: Stats total is invalid');
-    console.log('✅ PASS: Get Stats Model Test');
+    assert.equal(typeof stats.total, "number", "Stats total is not a number");
+    assert.ok(stats.total >= 1, "Stats should include the created todo");
+    console.log("PASS: fetch stats");
 
-    // 3. Toggle Todo Test
-    const toggled = await TodoModel.toggle(newTodo.id);
-    console.assert(toggled?.completed === true, '❌ Test Failed: Todo toggle state mismatch');
-    console.log('✅ PASS: Toggle Todo Model Test');
+    // 3. Toggle
+    const toggled = await TodoModel.toggle(createdId);
+    assert.equal(
+      toggled?.completed,
+      true,
+      "Todo should be completed after toggle",
+    );
+    console.log("PASS: toggle todo");
 
-    // 4. Delete Todo Test
-    const deleted = await TodoModel.delete(newTodo.id);
-    console.assert(deleted === true, '❌ Test Failed: Delete Todo failed');
-    console.log('✅ PASS: Delete Todo Model Test');
+    // 4. Delete
+    const deleted = await TodoModel.delete(createdId);
+    assert.equal(deleted, true, "Todo delete should return true");
+    createdId = undefined; // cleanup already done — no row left behind
+    console.log("PASS: delete todo");
 
-    console.log('🎉 All Server Model & DB Tests Passed!');
-    process.exit(0);
+    console.log("All server model & DB tests passed.");
   } catch (err) {
-    console.error('❌ Server Integration Test Error:', err);
-    process.exit(1);
+    failed = true;
+    console.error("Server integration test failed:", err);
+  } finally {
+    // Runs on success AND failure: never leave test data behind.
+    if (createdId !== undefined) {
+      await TodoModel.delete(createdId).catch(() => {});
+    }
   }
+
+  process.exit(failed ? 1 : 0);
 }
 
 runServerTests();
