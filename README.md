@@ -217,11 +217,34 @@ server {
 
 ---
 
-## Next Steps (Planned)
+## Continuous integration
 
-- [ ] CI/CD pipeline via GitHub Actions (build → push to registry → deploy to EC2)
-- [ ] AWS EC2 deployment with `docker compose` on the instance
-- [ ] Host port change: `3000:80` → `80:80` for production
-- [ ] SSL termination (Certbot / ALB + ACM)
-- [ ] Non-root user in server Dockerfile (`USER node`)
-- [ ] SIGTERM handling in `server/src/index.ts` for graceful shutdown
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs three independent
+checks on pushes to `main`, pull requests targeting `main`, and manual
+dispatches:
+
+| Job | What it checks | Database |
+|-----|----------------|----------|
+| `test-client` | Client lint and production build | None |
+| `test-server` | Server typecheck, build, and database integration tests | A job-scoped PostgreSQL service |
+| `test-e2e` | The Docker Compose test stack and Playwright browser journeys | The disposable database in `docker-compose.test.yml` |
+
+Each job gets its own GitHub-hosted runner. PostgreSQL is a container service,
+not a runner. The E2E job starts the client, server, and database together with
+Docker Compose. The local `pnpm test:e2e` command uses the same stack and always
+tears it down; a failed test remains a failed command.
+
+Configure the repository's branch protection or ruleset to require the
+`Client checks`, `Server integration`, and `Full-stack end-to-end` status checks
+before merge. The workflow only verifies changes. It does not publish images
+or deploy the app, leaving that work for the next stage.
+
+---
+
+## Next steps
+
+- [ ] Publish tested client and server images to a container registry
+- [ ] Deploy the images to AWS EC2 with `docker compose`
+- [ ] Change the production host port from `3000:80` to `80:80`
+- [ ] Configure SSL termination (Certbot or ALB + ACM)
+- [ ] Add graceful SIGTERM handling in `server/src/index.ts`

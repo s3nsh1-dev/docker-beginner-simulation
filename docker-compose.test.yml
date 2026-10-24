@@ -1,0 +1,55 @@
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    init: true
+    depends_on:
+      server:
+        condition: service_healthy
+    # restart: unless-stopped
+    ports:
+      - "3000:80"
+
+  server:
+    build: ./server
+    environment:
+      DATABASE_URL: postgres://test_user:test_password@test-db:5432/todo_test_db
+    depends_on:
+      test-db:
+        condition: service_healthy
+    # restart: unless-stopped
+    expose:
+      - "5000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://localhost:5000/api/health'').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  test-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: todo_test_db
+    ports:
+      # Map to custom host port 5434 to avoid clashing with local Postgres (5432)
+      - "5433:5432"
+    # In-memory tmpfs makes tests 5x faster and leaves no disk artifacts
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d todo_test_db"]
+      interval: 2s
+      timeout: 2s
+      retries: 10

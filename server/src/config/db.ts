@@ -24,6 +24,10 @@ export const pool = new pg.Pool({
 export const initDb = async () => {
   const client = await pool.connect();
   try {
+    // Drop existing table to ensure fresh state (useful for testing)
+    const dropTableQuery = `DROP TABLE IF EXISTS todos CASCADE;`;
+    await client.query(dropTableQuery);
+
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS todos (
         id SERIAL PRIMARY KEY,
