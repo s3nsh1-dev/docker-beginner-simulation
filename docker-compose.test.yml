@@ -53,3 +53,5 @@ services:
       interval: 2s
       timeout: 2s
       retries: 10
+
+# docker-hub-private-repo-link:https://hub.docker.com/repository/docker/shubham228pandey/docker-beginner-simulation/general
