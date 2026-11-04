@@ -217,34 +217,30 @@ server {
 
 ---
 
-## Continuous integration
+## Continuous integration & delivery
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs three independent
-checks on pushes to `main`, pull requests targeting `main`, and manual
-dispatches:
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs three verification
+checks on pull requests and pushes, followed by an automated release job on `main`:
 
-| Job | What it checks | Database |
-|-----|----------------|----------|
-| `test-client` | Client lint and production build | None |
-| `test-server` | Server typecheck, build, and database integration tests | A job-scoped PostgreSQL service |
-| `test-e2e` | The Docker Compose test stack and Playwright browser journeys | The disposable database in `docker-compose.test.yml` |
+| Job | What it checks / does | Environment |
+|-----|------------------------|-------------|
+| `test-client` | Client lint (`oxlint`) and production build (`tsc -b && vite build`) | Ubuntu runner (None) |
+| `test-server` | Server typecheck, build, and database integration tests | Ubuntu runner + job-scoped PostgreSQL service |
+| `test-e2e` | The Docker Compose test stack and Playwright browser journeys | Ubuntu runner + `docker-compose.test.yml` stack |
+| `publish-images` | Builds and pushes immutable client & server images to GHCR | Ubuntu runner + Buildx (runs only on merged `main`) |
 
-Each job gets its own GitHub-hosted runner. PostgreSQL is a container service,
-not a runner. The E2E job starts the client, server, and database together with
-Docker Compose. The local `pnpm test:e2e` command uses the same stack and always
-tears it down; a failed test remains a failed command.
-
-Configure the repository's branch protection or ruleset to require the
-`Client checks`, `Server integration`, and `Full-stack end-to-end` status checks
-before merge. The workflow only verifies changes. It does not publish images
-or deploy the app, leaving that work for the next stage.
+Each job gets its own GitHub-hosted runner. Pull requests run only the three test
+jobs with read-only permissions. Once a PR is approved and merged into `main`, the
+`publish-images` job executes downstream, tagging both images with the immutable Git
+commit SHA (`sha-<short>`) and pushing them to GitHub Container Registry (`ghcr.io`).
 
 ---
 
 ## Next steps
 
-- [ ] Publish tested client and server images to a container registry
-- [ ] Deploy the images to AWS EC2 with `docker compose`
-- [ ] Change the production host port from `3000:80` to `80:80`
+- [x] Stage 4: Publish tested immutable client and server images to GHCR
+- [ ] Stage 5: Define the production Compose contract (consume GHCR images via `IMAGE_TAG`)
+- [ ] Stage 6: Prepare and secure EC2 host (Docker, read-only token, `server.env`)
+- [ ] Stage 7: Deploy from `main` with automated health polling and rollback
 - [ ] Configure SSL termination (Certbot or ALB + ACM)
 - [ ] Add graceful SIGTERM handling in `server/src/index.ts`
