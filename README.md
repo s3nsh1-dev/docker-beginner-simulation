@@ -236,10 +236,26 @@ commit SHA (`sha-<short>`) and pushing them to GitHub Container Registry (`ghcr.
 
 ---
 
+## Production Compose contract (`docker-compose.prod.yml`)
+
+The production deployment uses `docker-compose.prod.yml` to pull prebuilt GHCR
+images instead of building from source on the live EC2 host:
+
+- **Client (`ports: ["80:80"]`):** Pulls `ghcr.io/s3nsh1-dev/docker-beginner-simulation-client:${IMAGE_TAG}`. Binds host port 80 to terminate web traffic.
+- **Server (`expose: ["5000"]`):** Pulls `ghcr.io/s3nsh1-dev/docker-beginner-simulation-server:${IMAGE_TAG}`. Reaches external Neon PostgreSQL using credentials from a host-only `server.env` file. Never publishes host ports.
+- **Release tag separation (`release.env`):** `IMAGE_TAG` is read from `release.env` (e.g. `IMAGE_TAG=sha-b94f0e5`), completely decoupled from secret credentials.
+
+Validate the production configuration at any time:
+```bash
+docker compose --env-file release.env -f docker-compose.prod.yml config
+```
+
+---
+
 ## Next steps
 
 - [x] Stage 4: Publish tested immutable client and server images to GHCR
-- [ ] Stage 5: Define the production Compose contract (consume GHCR images via `IMAGE_TAG`)
+- [x] Stage 5: Define the production Compose contract (consume GHCR images via `IMAGE_TAG`)
 - [ ] Stage 6: Prepare and secure EC2 host (Docker, read-only token, `server.env`)
 - [ ] Stage 7: Deploy from `main` with automated health polling and rollback
 - [ ] Configure SSL termination (Certbot or ALB + ACM)
