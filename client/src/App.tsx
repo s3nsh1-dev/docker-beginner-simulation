@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTodos } from './hooks/useTodos';
 import { Header } from './components/Header';
 import { StatsDashboard } from './components/StatsDashboard';
@@ -36,7 +36,7 @@ export default function App() {
   });
 
   const [accent, setAccent] = useState<'cyan' | 'emerald' | 'rose' | 'amber'>(() => {
-    return (localStorage.getItem('taskpulse_accent') as any) || 'cyan';
+    return (localStorage.getItem('taskpulse_accent') as 'cyan' | 'emerald' | 'rose' | 'amber') || 'cyan';
   });
 
   useEffect(() => {
@@ -48,6 +48,16 @@ export default function App() {
     document.documentElement.setAttribute('data-accent', accent);
     localStorage.setItem('taskpulse_accent', accent);
   }, [accent]);
+
+  const handleOpenCreateModal = useCallback(() => {
+    setEditingTodo(null);
+    setModalOpen(true);
+  }, []);
+
+  const handleOpenEditModal = useCallback((todo: Todo) => {
+    setEditingTodo(todo);
+    setModalOpen(true);
+  }, []);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -66,17 +76,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleOpenCreateModal = () => {
-    setEditingTodo(null);
-    setModalOpen(true);
-  };
-
-  const handleOpenEditModal = (todo: Todo) => {
-    setEditingTodo(todo);
-    setModalOpen(true);
-  };
+  }, [handleOpenCreateModal]);
 
   const handleQuickAdd = async (input: CreateTodoInput) => {
     await createTodo(input);
@@ -100,13 +100,13 @@ export default function App() {
         onChangeAccent={setAccent}
       />
 
-      {/* Hero Stats Dashboard with SVG Progress Ring */}
+      {/* Stats Dashboard Telemetry Ribbon */}
       <StatsDashboard stats={stats} />
 
       {/* Quick Add Bar */}
       <QuickAdd onAdd={handleQuickAdd} />
 
-      {/* Filter Bar */}
+      {/* Filter Toolbar */}
       <FilterBar
         filters={filters}
         setFilters={setFilters}
@@ -119,29 +119,31 @@ export default function App() {
         <div
           className="glass-card"
           style={{
-            padding: '16px 20px',
-            marginBottom: '24px',
-            borderColor: 'rgba(244, 63, 94, 0.4)',
-            background: 'rgba(244, 63, 94, 0.12)',
-            color: '#fda4af',
+            padding: '14px 18px',
+            marginBottom: '20px',
+            borderColor: 'var(--status-urgent-border)',
+            background: 'var(--status-urgent-bg)',
+            color: 'var(--status-urgent)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
           }}
+          role="alert"
         >
-          <AlertTriangle size={20} />
-          <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>{error}</div>
+          <AlertTriangle size={18} />
+          <div style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500 }}>{error}</div>
         </div>
       )}
 
-      {/* Main Todo List Grid */}
+      {/* Main Todo List Stream */}
       {loading ? (
         <div
           className="glass-card"
-          style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}
+          style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}
+          role="status"
         >
-          <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
-          <p style={{ marginTop: '14px', fontSize: '0.95rem' }}>Syncing tasks with database...</p>
+          <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+          <p style={{ marginTop: '12px', fontSize: '0.875rem' }}>Syncing tasks...</p>
         </div>
       ) : todos.length === 0 ? (
         <EmptyState
@@ -149,7 +151,7 @@ export default function App() {
           onOpenModal={handleOpenCreateModal}
         />
       ) : (
-        <div className="todo-list-grid">
+        <main className="todo-list-grid" aria-label="Task stream">
           {todos.map((todo) => (
             <TodoCard
               key={todo.id}
@@ -159,7 +161,7 @@ export default function App() {
               onDelete={deleteTodo}
             />
           ))}
-        </div>
+        </main>
       )}
 
       {/* Modal Dialog */}
@@ -173,10 +175,10 @@ export default function App() {
 
       {/* Floating Notification Toast */}
       {toastMessage && (
-        <div className="toast">
-          <CheckCircle2 size={18} style={{ color: 'var(--accent-primary)' }} />
+        <aside className="toast" role="status" aria-live="polite">
+          <CheckCircle2 size={16} style={{ color: 'var(--status-success)' }} />
           <span>{toastMessage}</span>
-        </div>
+        </aside>
       )}
     </div>
   );
