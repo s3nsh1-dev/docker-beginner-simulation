@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Plus, Sun, Moon } from 'lucide-react';
+import { Layers, Plus, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   onOpenModal: () => void;
@@ -21,62 +21,73 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="app-header glass-card">
       <div className="logo-container">
-        <div className="logo-icon-wrapper">
-          <CheckSquare size={26} />
+        <div className="logo-icon-wrapper" aria-hidden="true">
+          <Layers size={18} />
         </div>
         <div>
-          <div className="logo-title">TaskPulse</div>
+          <h1 className="logo-title">TaskPulse</h1>
           <div className="logo-subtitle">
-            {pendingCount === 0 ? '✨ All tasks completed!' : `⚡ ${pendingCount} pending task${pendingCount > 1 ? 's' : ''}`}
+            {pendingCount === 0 ? 'All tasks completed' : `${pendingCount} active task${pendingCount === 1 ? '' : 's'} remaining`}
           </div>
         </div>
       </div>
 
       <div className="theme-controls">
         {/* Accent Color Palette Selector */}
-        <div style={{ display: 'flex', gap: '6px', marginRight: '10px' }}>
-          <div
+        <div className="accent-capsule" role="group" aria-label="Accent color presets">
+          <button
+            type="button"
             className={`accent-pill ${accent === 'cyan' ? 'active' : ''}`}
-            style={{ background: '#06b6d4' }}
+            style={{ background: '#0284c7' }}
             onClick={() => onChangeAccent('cyan')}
-            title="Cyber Cyan Theme"
+            title="Cerulean accent"
+            aria-label="Cerulean accent"
           />
-          <div
+          <button
+            type="button"
             className={`accent-pill ${accent === 'emerald' ? 'active' : ''}`}
-            style={{ background: '#10b981' }}
+            style={{ background: '#059669' }}
             onClick={() => onChangeAccent('emerald')}
-            title="Emerald Theme"
+            title="Emerald accent"
+            aria-label="Emerald accent"
           />
-          <div
+          <button
+            type="button"
             className={`accent-pill ${accent === 'rose' ? 'active' : ''}`}
-            style={{ background: '#f43f5e' }}
+            style={{ background: '#e11d48' }}
             onClick={() => onChangeAccent('rose')}
-            title="Rose Theme"
+            title="Rose accent"
+            aria-label="Rose accent"
           />
-          <div
+          <button
+            type="button"
             className={`accent-pill ${accent === 'amber' ? 'active' : ''}`}
-            style={{ background: '#f59e0b' }}
+            style={{ background: '#d97706' }}
             onClick={() => onChangeAccent('amber')}
-            title="Amber Theme"
+            title="Amber accent"
+            aria-label="Amber accent"
           />
         </div>
 
         {/* Light / Dark Mode Toggle */}
         <button
+          type="button"
           className="btn-icon-toggle"
           onClick={onToggleTheme}
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
         {/* New Task Button */}
         <button
           id="btn-create-task"
-          className="btn-primary"
+          type="button"
+          className="btn-primary header-action-btn"
           onClick={onOpenModal}
         >
-          <Plus size={18} />
+          <Plus size={15} />
           <span>New Task</span>
         </button>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { PriorityLevel, Category, CreateTodoInput } from '../types/todo';
-import { Plus, Tag, AlertCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface QuickAddProps {
   onAdd: (input: CreateTodoInput) => Promise<void>;
@@ -30,59 +30,57 @@ export const QuickAdd: React.FC<QuickAddProps> = ({ onAdd }) => {
   };
 
   return (
-    <form className="quick-add-card glass-card" onSubmit={handleSubmit}>
+    <form className="quick-add-card glass-card" onSubmit={handleSubmit} aria-label="Quick task creation">
       <div className="quick-add-row">
         <input
           id="quick-todo-input"
           type="text"
-          className="input-glass"
-          placeholder="What needs to be done? Press Enter to quickly add..."
+          className="input-glass quick-input"
+          placeholder="Capture new task... (press Enter to add)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={submitting}
+          autoComplete="off"
+          spellCheck="false"
         />
         <button
           id="btn-quick-add"
           type="submit"
-          className="btn-primary"
+          className="btn-primary quick-add-btn"
           disabled={!title.trim() || submitting}
         >
-          <Plus size={18} />
+          <Plus size={15} />
           <span>Add</span>
         </button>
       </div>
 
       <div className="quick-add-options">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <AlertCircle size={14} style={{ color: 'var(--text-muted)' }} />
-          <select
-            id="quick-priority-select"
-            className="select-glass"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-          >
-            <option value="medium">🟡 Medium Priority</option>
-            <option value="high">🟠 High Priority</option>
-            <option value="urgent">🔴 Urgent Priority</option>
-            <option value="low">🔵 Low Priority</option>
-          </select>
-        </div>
+        <select
+          id="quick-priority-select"
+          aria-label="Priority"
+          className="select-glass"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as PriorityLevel)}
+        >
+          <option value="medium">Medium priority</option>
+          <option value="high">High priority</option>
+          <option value="urgent">Urgent priority</option>
+          <option value="low">Low priority</option>
+        </select>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Tag size={14} style={{ color: 'var(--text-muted)' }} />
-          <select
-            id="quick-category-select"
-            className="select-glass"
-            value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
-          >
-            <option value="general">📌 General</option>
-            <option value="work">💼 Work</option>
-            <option value="personal">👤 Personal</option>
-            <option value="shopping">🛒 Shopping</option>
-            <option value="health">❤️ Health</option>
-          </select>
-        </div>
+        <select
+          id="quick-category-select"
+          aria-label="Category"
+          className="select-glass"
+          value={category}
+          onChange={(e) => setCategory(e.target.value as Category)}
+        >
+          <option value="general">General</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="shopping">Shopping</option>
+          <option value="health">Health</option>
+        </select>
       </div>
     </form>
   );

@@ -30,78 +30,66 @@ export const TodoCard: React.FC<TodoCardProps> = ({
     }
 
     if (diffDays < 0) {
-      return { text: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''}`, isOverdue: true };
+      return { text: `Overdue by ${Math.abs(diffDays)}d`, isOverdue: true };
     } else if (diffDays === 0) {
-      return { text: 'Due Today', isOverdue: false, isToday: true };
+      return { text: 'Due today', isOverdue: false, isToday: true };
     } else if (diffDays === 1) {
-      return { text: 'Due Tomorrow', isOverdue: false };
+      return { text: 'Due tomorrow', isOverdue: false };
     } else {
-      return { text: `Due in ${diffDays} days`, isOverdue: false };
+      return { text: `Due in ${diffDays}d`, isOverdue: false };
     }
   };
 
   const dueStatus = getDueStatus(todo.due_date);
 
-  const getPriorityDot = (p: string) => {
-    switch (p) {
-      case 'urgent': return '🔴';
-      case 'high': return '🟠';
-      case 'medium': return '🟡';
-      default: return '🔵';
-    }
-  };
-
   return (
-    <div
+    <article
       className={`todo-card glass-card ${todo.completed ? 'completed' : ''}`}
       data-testid={`todo-card-${todo.id}`}
     >
-      {/* Animated Checkbox */}
-      <div
+      {/* Accessible Checkbox */}
+      <button
+        type="button"
         className={`checkbox-custom ${todo.completed ? 'checked' : ''}`}
         onClick={() => onToggle(todo.id)}
         role="checkbox"
         aria-checked={todo.completed}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onToggle(todo.id);
-          }
-        }}
+        aria-label={`Mark task "${todo.title}" as ${todo.completed ? 'incomplete' : 'complete'}`}
       >
-        {todo.completed && <Check size={14} />}
-      </div>
+        {todo.completed && <Check size={13} strokeWidth={3} />}
+      </button>
 
       {/* Main Content */}
       <div className="todo-content">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="todo-header-row">
           <div className={`todo-title ${todo.completed ? 'strikethrough' : ''}`}>
             {todo.title}
           </div>
 
           {todo.description && (
             <button
+              type="button"
               className="icon-btn"
               onClick={() => setExpanded(!expanded)}
-              style={{ padding: '4px' }}
+              style={{ padding: '2px' }}
               title={expanded ? 'Collapse details' : 'Expand details'}
+              aria-expanded={expanded}
+              aria-label={expanded ? 'Collapse description' : 'Expand description'}
             >
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </button>
           )}
         </div>
 
         {/* Description */}
-        {todo.description && (expanded || todo.description.length < 90) && (
-          <div className="todo-desc">{todo.description}</div>
+        {todo.description && (expanded || todo.description.length < 80) && (
+          <p className="todo-desc">{todo.description}</p>
         )}
 
         <div className="todo-meta">
           {/* Priority Badge */}
           <span className={`badge badge-${todo.priority}`}>
-            <span>{getPriorityDot(todo.priority)}</span>
-            <span>{todo.priority}</span>
+            {todo.priority}
           </span>
 
           {/* Category Badge */}
@@ -115,37 +103,41 @@ export const TodoCard: React.FC<TodoCardProps> = ({
               className="due-date-chip"
               style={
                 dueStatus.isOverdue
-                  ? { color: '#f43f5e', background: 'rgba(244, 63, 94, 0.15)', borderColor: 'rgba(244, 63, 94, 0.3)' }
+                  ? { color: 'var(--status-urgent)', background: 'var(--status-urgent-bg)', borderColor: 'var(--status-urgent-border)' }
                   : dueStatus.isToday
-                  ? { color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.3)' }
+                  ? { color: 'var(--status-medium)', background: 'var(--status-medium-bg)', borderColor: 'var(--status-medium-border)' }
                   : {}
               }
             >
-              {dueStatus.isOverdue ? <AlertCircle size={13} /> : <Calendar size={13} />}
+              {dueStatus.isOverdue ? <AlertCircle size={12} /> : <Calendar size={12} />}
               <span>{dueStatus.text}</span>
             </span>
           )}
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Action Buttons */}
       <div className="action-buttons">
         <button
+          type="button"
           className="icon-btn edit-todo-btn"
           onClick={() => onEdit(todo)}
-          title="Edit Task"
+          title="Edit task"
+          aria-label={`Edit task "${todo.title}"`}
         >
-          <Edit2 size={16} />
+          <Edit2 size={15} />
         </button>
 
         <button
+          type="button"
           className="icon-btn delete delete-todo-btn"
           onClick={() => onDelete(todo.id)}
-          title="Delete Task"
+          title="Delete task"
+          aria-label={`Delete task "${todo.title}"`}
         >
-          <Trash2 size={16} />
+          <Trash2 size={15} />
         </button>
       </div>
-    </div>
+    </article>
   );
 };

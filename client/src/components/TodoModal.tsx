@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Todo, CreateTodoInput, UpdateTodoInput, PriorityLevel, Category } from '../types/todo';
-import { X, Save, Plus } from 'lucide-react';
+import { X, Plus, Save } from 'lucide-react';
 
 interface TodoModalProps {
   isOpen: boolean;
@@ -25,7 +25,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Synchronize form values whenever modal opens or editingTodo changes
   useEffect(() => {
+    if (!isOpen) return;
+
     if (editingTodo) {
       setTitle(editingTodo.title);
       setDescription(editingTodo.description || '');
@@ -42,12 +45,24 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     setErrorMsg('');
   }, [editingTodo, isOpen]);
 
+  // Handle escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setErrorMsg('Title is required');
+      setErrorMsg('Task title is required');
       return;
     }
 
@@ -74,33 +89,48 @@ export const TodoModal: React.FC<TodoModalProps> = ({
       }
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error saving todo');
+      setErrorMsg(err.message || 'Failed to save task');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-heading"
+    >
       <div className="modal-content glass-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">
+          <h2 id="modal-heading" className="modal-title">
             {editingTodo ? 'Edit Task' : 'Create New Task'}
           </h2>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={20} />
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            aria-label="Close dialog"
+          >
+            <X size={18} />
           </button>
         </div>
 
         {errorMsg && (
-          <div style={{
-            background: 'rgba(244, 63, 94, 0.15)',
-            color: '#f43f5e',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            fontSize: '0.85rem'
-          }}>
+          <div
+            style={{
+              background: 'var(--status-urgent-bg)',
+              color: 'var(--status-urgent)',
+              border: '1px solid var(--status-urgent-border)',
+              padding: '8px 12px',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '16px',
+              fontSize: '0.8125rem',
+            }}
+            role="alert"
+          >
             {errorMsg}
           </div>
         )}
@@ -108,16 +138,17 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         <form onSubmit={handleSubmit}>
           {/* Title */}
           <div className="form-group">
-            <label className="form-label" htmlFor="modal-todo-title">Task Title *</label>
+            <label className="form-label" htmlFor="modal-todo-title">Task title *</label>
             <input
               id="modal-todo-title"
               type="text"
               className="input-glass"
-              placeholder="Enter task title..."
+              placeholder="What needs to be done?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
               autoFocus
+              autoComplete="off"
             />
           </div>
 
@@ -128,7 +159,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               id="modal-todo-desc"
               className="input-glass"
               rows={3}
-              placeholder="Add extra details or notes..."
+              placeholder="Add optional notes, context, or checklist..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               style={{ resize: 'vertical' }}
@@ -174,7 +205,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
           {/* Due Date */}
           <div className="form-group">
-            <label className="form-label" htmlFor="modal-todo-duedate">Due Date</label>
+            <label className="form-label" htmlFor="modal-todo-duedate">Due date</label>
             <input
               id="modal-todo-duedate"
               type="date"
@@ -184,12 +215,22 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={submitting}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={onClose}
+              disabled={submitting}
+            >
               Cancel
             </button>
-            <button id="modal-submit-btn" type="submit" className="btn-primary" disabled={submitting}>
-              {editingTodo ? <Save size={18} /> : <Plus size={18} />}
+            <button
+              id="modal-submit-btn"
+              type="submit"
+              className="btn-primary"
+              disabled={submitting}
+            >
+              {editingTodo ? <Save size={16} /> : <Plus size={16} />}
               <span>{editingTodo ? 'Save Changes' : 'Create Task'}</span>
             </button>
           </div>
