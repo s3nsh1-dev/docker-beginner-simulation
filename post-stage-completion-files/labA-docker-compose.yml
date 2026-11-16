@@ -5,3 +5,7 @@ services:
     image: todo-client:lab
     ports:
       - "3000:80"
+
+networks:
+  default:
+    name: todo-lab-net

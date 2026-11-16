@@ -1,6 +1,6 @@
 services:
   client:
-    image: ghcr.io/s3nsh1-dev/docker-beginner-simulation-client:${IMAGE_TAG}
+    image: ghcr.io/${IMAGE_REPO:-s3nsh1-dev/docker-beginner-simulation}-client:${IMAGE_TAG:-latest}
     init: true
     restart: unless-stopped
     ports:
@@ -15,7 +15,8 @@ services:
         max-file: "3"
 
   server:
-    image: ghcr.io/s3nsh1-dev/docker-beginner-simulation-server:${IMAGE_TAG}
+    image: ghcr.io/${IMAGE_REPO:-s3nsh1-dev/docker-beginner-simulation}-server:${IMAGE_TAG:-latest}
+    init: true
     restart: unless-stopped
     expose:
       - "5000"

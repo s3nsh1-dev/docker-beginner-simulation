@@ -25,7 +25,7 @@ export const TodoController = {
     try {
       const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(String(paramId), 10);
-      if (isNaN(id)) {
+      if (isNaN(id) || id <= 0 || id > 2147483647) {
         res.status(400).json({ message: 'Invalid ID parameter' });
         return;
       }
@@ -64,7 +64,7 @@ export const TodoController = {
     try {
       const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(String(paramId), 10);
-      if (isNaN(id)) {
+      if (isNaN(id) || id <= 0 || id > 2147483647) {
         res.status(400).json({ message: 'Invalid ID parameter' });
         return;
       }
@@ -85,7 +85,7 @@ export const TodoController = {
     try {
       const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(String(paramId), 10);
-      if (isNaN(id)) {
+      if (isNaN(id) || id <= 0 || id > 2147483647) {
         res.status(400).json({ message: 'Invalid ID parameter' });
         return;
       }
@@ -106,7 +106,7 @@ export const TodoController = {
     try {
       const paramId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(String(paramId), 10);
-      if (isNaN(id)) {
+      if (isNaN(id) || id <= 0 || id > 2147483647) {
         res.status(400).json({ message: 'Invalid ID parameter' });
         return;
       }

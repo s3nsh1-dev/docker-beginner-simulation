@@ -37,11 +37,14 @@ export const TodoModel = {
     const validSortFields = ['created_at', 'due_date', 'priority', 'title'];
     const sortBy = validSortFields.includes(params.sortBy || '') ? params.sortBy : 'created_at';
     const sortOrder = params.sortOrder === 'asc' ? 'ASC' : 'DESC';
+    const sortExpression = sortBy === 'priority'
+      ? `CASE priority WHEN 'urgent' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END`
+      : sortBy;
 
     const query = `
       SELECT * FROM todos
       ${whereClause}
-      ORDER BY ${sortBy} ${sortOrder} NULLS LAST
+      ORDER BY ${sortExpression} ${sortOrder} NULLS LAST
     `;
 
     const result = await pool.query(query, values);
@@ -98,7 +101,7 @@ export const TodoModel = {
     }
     if (data.due_date !== undefined) {
       fields.push(`due_date = $${paramIndex++}`);
-      values.push(data.due_date);
+      values.push(data.due_date || null);
     }
 
     fields.push(`updated_at = CURRENT_TIMESTAMP`);

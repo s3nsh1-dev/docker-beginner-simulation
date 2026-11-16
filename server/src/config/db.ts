@@ -21,12 +21,13 @@ export const pool = new pg.Pool({
     : false,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle pg client:', err);
+});
+
 export const initDb = async () => {
   const client = await pool.connect();
   try {
-    // Drop existing table to ensure fresh state (useful for testing)
-    const dropTableQuery = `DROP TABLE IF EXISTS todos CASCADE;`;
-    await client.query(dropTableQuery);
 
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS todos (

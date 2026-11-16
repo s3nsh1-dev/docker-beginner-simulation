@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import { initDb } from "./config/db.js";
+import { initDb, pool } from "./config/db.js";
 import todoRoutes from "./routes/todoRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -39,11 +39,20 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await initDb();
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(
         `🚀 Express REST API server running on http://localhost:${PORT}`,
       );
     });
+
+    const shutdown = async () => {
+      console.log('Shutting down gracefully...');
+      server.close();
+      await pool.end();
+      process.exit(0);
+    };
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
