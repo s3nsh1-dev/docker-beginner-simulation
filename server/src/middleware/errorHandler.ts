@@ -10,8 +10,10 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const statusCode = err.statusCode || (err as any).status || 500;
+  const message = (process.env.NODE_ENV === 'production' && statusCode === 500)
+    ? 'Internal Server Error'
+    : (err.message || 'Internal Server Error');
 
   console.error(`[Error] ${req.method} ${req.path} - ${statusCode}:`, err);
 

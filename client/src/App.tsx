@@ -62,6 +62,11 @@ export default function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't fire shortcuts when modal is open
+      if (modalOpen) return;
+      // Don't intercept browser shortcuts with modifier keys
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       // Don't trigger when inside inputs
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
         return;
@@ -76,7 +81,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleOpenCreateModal]);
+  }, [handleOpenCreateModal, modalOpen]);
 
   const handleQuickAdd = async (input: CreateTodoInput) => {
     await createTodo(input);

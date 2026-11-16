@@ -20,10 +20,13 @@ export const TodoCard: React.FC<TodoCardProps> = ({
   // Relative due date calculation
   const getDueStatus = (dueDateStr: string | null) => {
     if (!dueDateStr) return null;
-    const due = new Date(dueDateStr);
-    const now = new Date();
+    const dueDate = new Date(dueDateStr);
+    const today = new Date();
+    // Normalize both to local midnight to compare calendar dates, not timestamps
+    const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+    const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const diffTime = due.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     if (todo.completed) {
       return { text: due.toLocaleDateString(), isOverdue: false };
@@ -66,7 +69,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({
             {todo.title}
           </div>
 
-          {todo.description && (
+          {todo.description && todo.description.length >= 80 && (
             <button
               type="button"
               className="icon-btn"
@@ -82,8 +85,12 @@ export const TodoCard: React.FC<TodoCardProps> = ({
         </div>
 
         {/* Description */}
-        {todo.description && (expanded || todo.description.length < 80) && (
-          <p className="todo-desc">{todo.description}</p>
+        {todo.description && (
+          <p className="todo-desc">
+            {expanded || todo.description.length < 80
+              ? todo.description
+              : `${todo.description.slice(0, 80)}...`}
+          </p>
         )}
 
         <div className="todo-meta">

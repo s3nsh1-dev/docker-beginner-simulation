@@ -30,7 +30,11 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     let errorMessage = `HTTP ${response.status} Error`;
     try {
       const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
+      if (Array.isArray(errorData.details) && errorData.details.length > 0) {
+        errorMessage = errorData.details.map((d: any) => d.message).join(', ');
+      } else {
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      }
     } catch {
       // fallback
     }
@@ -41,7 +45,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 }
 
 export const todoApi = {
-  async getTodos(filters: TodoFilterParams): Promise<Todo[]> {
+  async getTodos(filters: TodoFilterParams, signal?: AbortSignal): Promise<Todo[]> {
     const params = new URLSearchParams();
     if (filters.search) params.append("search", filters.search);
     if (filters.completed !== "all")
@@ -52,7 +56,11 @@ export const todoApi = {
     if (filters.sortOrder) params.append("sortOrder", filters.sortOrder);
 
     const queryString = params.toString() ? `?${params.toString()}` : "";
-    return request<Todo[]>(queryString);
+    return request<Todo[]>(queryString, { signal });
+  },
+
+  async getAll(filters: TodoFilterParams, signal?: AbortSignal): Promise<Todo[]> {
+    return this.getTodos(filters, signal);
   },
 
   async getTodoById(id: number): Promise<Todo> {

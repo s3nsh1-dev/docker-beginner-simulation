@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Todo, TodoFilterParams, TodoStats, CreateTodoInput, UpdateTodoInput } from '../types/todo';
 import { todoApi } from '../services/api';
 
@@ -18,12 +18,24 @@ export function useTodos() {
     sortOrder: 'desc',
   });
 
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToastMessage(null);
     }, 3000);
   };
+
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search || '');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(filters.search || ''), 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
+
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -35,22 +47,40 @@ export function useTodos() {
   }, []);
 
   const fetchTodos = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
     try {
-      const data = await todoApi.getTodos(filters);
-      setTodos(data);
-      await fetchStats();
+      const queryFilters = {
+        ...filters,
+        search: debouncedSearch,
+      };
+      const data = await todoApi.getTodos(queryFilters, controller.signal);
+      if (!controller.signal.aborted) {
+        setTodos(data);
+        await fetchStats();
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to connect to backend server');
+      if (err instanceof Error && err.name === 'AbortError') return;
+      if (!controller.signal.aborted) {
+        setError(err.message || 'Failed to connect to backend server');
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
-  }, [filters, fetchStats]);
+  }, [filters, debouncedSearch, fetchStats]);
 
   useEffect(() => {
     fetchTodos();
-  }, [fetchTodos]);
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [debouncedSearch, filters.completed, filters.priority, filters.sortBy, filters.sortOrder]);
 
   const createTodo = async (input: CreateTodoInput) => {
     try {
@@ -78,9 +108,12 @@ export function useTodos() {
 
   const toggleTodo = async (id: number) => {
     // Optimistic UI update
-    setTodos(prev =>
-      prev.map(t => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
+    setTodos(prev => {
+      if (filters.completed !== 'all') {
+        return prev.filter(t => t.id !== id);
+      }
+      return prev.map(t => (t.id === id ? { ...t, completed: !t.completed } : t));
+    });
     try {
       const updated = await todoApi.toggleTodo(id);
       showToast(updated.completed ? 'Task completed! 🎉' : 'Task marked active');

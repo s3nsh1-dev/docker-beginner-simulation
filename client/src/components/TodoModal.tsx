@@ -76,7 +76,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
           description: description.trim(),
           priority,
           category,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+          due_date: dueDate || null,
         });
       } else {
         await onSubmitCreate({
@@ -84,7 +84,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
           description: description.trim(),
           priority,
           category,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+          due_date: dueDate || null,
         });
       }
       onClose();

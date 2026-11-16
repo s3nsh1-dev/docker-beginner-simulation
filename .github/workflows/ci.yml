@@ -210,12 +210,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: [publish-images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: read
     concurrency:
       group: production-ec2-deployment
       cancel-in-progress: false
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authorize Runner IP in Security Group
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "Discovered runner public IP: $RUNNER_IP"
+          echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
+          aws ec2 authorize-security-group-ingress \
+            --group-id "${{ secrets.AWS_SG_ID }}" \
+            --protocol tcp \
+            --port 22 \
+            --cidr "${RUNNER_IP}/32"
+          echo "Successfully whitelisted $RUNNER_IP in Security Group ${{ secrets.AWS_SG_ID }}."
 
       - name: Configure SSH agent
         uses: webfactory/ssh-agent@v0.9.0
@@ -233,10 +255,15 @@ jobs:
           scp docker-compose.prod.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/todo-app/docker-compose.prod.yml
 
       - name: Execute remote deployment & healthcheck
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' << 'EOF'
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "GHCR_TOKEN='$GHCR_TOKEN' GITHUB_ACTOR='$GITHUB_ACTOR' bash -s" << 'EOF'
             set -euo pipefail
             cd /opt/todo-app
+
+            trap 'echo "Deployment failed, triggering rollback..."; if [ -f rollback.env ]; then cp rollback.env release.env; docker compose -f docker-compose.prod.yml --env-file release.env up -d; echo "Rolled back to previous known-good tag."; fi' ERR
 
             # 1. Preserve current tag for rollback
             if [ -f release.env ]; then
@@ -248,16 +275,23 @@ jobs:
             if [ -z "$TAG" ]; then
               TAG="sha-$(echo "${{ github.sha }}" | cut -c 1-7)"
             fi
-            echo "IMAGE_TAG=$TAG" > release.env
+            if grep -q '^IMAGE_TAG=' release.env 2>/dev/null; then
+              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$TAG/" release.env
+            else
+              echo "IMAGE_TAG=$TAG" >> release.env
+            fi
             chmod 600 release.env
 
-            # 3. Pre-pull images while current stack is still serving traffic
+            # 3. Log in to GHCR
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+            # 4. Pre-pull images while current stack is still serving traffic
             docker compose -f docker-compose.prod.yml --env-file release.env pull
 
-            # 4. Recreate containers with zero downtime
+            # 5. Recreate containers with zero downtime
             docker compose -f docker-compose.prod.yml --env-file release.env up -d --remove-orphans
 
-            # 5. Automated healthcheck polling (Tier 3 deep check)
+            # 6. Automated healthcheck polling (Tier 3 deep check)
             echo "Polling live application healthcheck..."
             for i in {1..12}; do
               if curl -sf http://localhost/api/health | grep -q '"status":"ok"'; then
@@ -276,3 +310,16 @@ jobs:
             fi
             exit 1
           EOF
+
+      - name: Revoke Runner IP from Security Group
+        if: always()
+        run: |
+          if [ -n "${RUNNER_IP:-}" ]; then
+            echo "Revoking $RUNNER_IP from Security Group..."
+            aws ec2 revoke-security-group-ingress \
+              --group-id "${{ secrets.AWS_SG_ID }}" \
+              --protocol tcp \
+              --port 22 \
+              --cidr "${RUNNER_IP}/32" || echo "Revoke completed or rule already gone."
+            echo "Security Group successfully locked down."
+          fi

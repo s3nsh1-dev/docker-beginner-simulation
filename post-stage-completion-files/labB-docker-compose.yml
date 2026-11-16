@@ -4,8 +4,12 @@ services:
   server:
     image: todo-server:lab
     env_file:
-      - ./server/.env
+      - ../server.env
     environment:
       PORT: 5000
     ports:
       - "5000:5000"
+
+networks:
+  default:
+    name: todo-lab-net

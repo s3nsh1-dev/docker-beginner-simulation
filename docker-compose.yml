@@ -10,11 +10,17 @@ services:
     restart: unless-stopped
     ports:
       - "3000:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   server:
     build: ./server
+    init: true
     env_file:
-      - ./server/.env
+      - ./server.env
     restart: unless-stopped
     expose:
       - "5000"
