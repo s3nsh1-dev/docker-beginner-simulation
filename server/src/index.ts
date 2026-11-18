@@ -24,9 +24,9 @@ app.use(
 );
 app.use(express.json());
 
-// Healthcheck
+// Healthcheck — Stage 8 simulated crash
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(500).json({ status: "error", reason: "simulated crash" });
 });
 
 // Routes

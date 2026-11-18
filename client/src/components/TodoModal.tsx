@@ -10,44 +10,24 @@ interface TodoModalProps {
   editingTodo: Todo | null;
 }
 
-export const TodoModal: React.FC<TodoModalProps> = ({
-  isOpen,
+const TodoModalContent: React.FC<Omit<TodoModalProps, 'isOpen'>> = ({
   onClose,
   onSubmitCreate,
   onSubmitUpdate,
   editingTodo,
 }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<PriorityLevel>('medium');
-  const [category, setCategory] = useState<Category>('general');
-  const [dueDate, setDueDate] = useState('');
+  const [title, setTitle] = useState(editingTodo?.title || '');
+  const [description, setDescription] = useState(editingTodo?.description || '');
+  const [priority, setPriority] = useState<PriorityLevel>(editingTodo?.priority || 'medium');
+  const [category, setCategory] = useState<Category>(editingTodo?.category || 'general');
+  const [dueDate, setDueDate] = useState(
+    editingTodo?.due_date ? editingTodo.due_date.substring(0, 10) : ''
+  );
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Synchronize form values whenever modal opens or editingTodo changes
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (editingTodo) {
-      setTitle(editingTodo.title);
-      setDescription(editingTodo.description || '');
-      setPriority(editingTodo.priority);
-      setCategory(editingTodo.category);
-      setDueDate(editingTodo.due_date ? editingTodo.due_date.substring(0, 10) : '');
-    } else {
-      setTitle('');
-      setDescription('');
-      setPriority('medium');
-      setCategory('general');
-      setDueDate('');
-    }
-    setErrorMsg('');
-  }, [editingTodo, isOpen]);
-
   // Handle escape key
   useEffect(() => {
-    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -55,9 +35,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,5 +215,16 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         </form>
       </div>
     </div>
+  );
+};
+
+export const TodoModal: React.FC<TodoModalProps> = (props) => {
+  if (!props.isOpen) return null;
+
+  return (
+    <TodoModalContent
+      key={props.editingTodo ? `edit-${props.editingTodo.id}` : 'create'}
+      {...props}
+    />
   );
 };
