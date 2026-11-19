@@ -26,11 +26,12 @@ app.use(express.json());
 
 // Healthcheck — Stage 8 simulated crash (passes in CI tests, fails on EC2)
 app.get("/api/health", (req, res) => {
-  const isTest = process.env.DATABASE_URL?.includes("test");
-  if (!isTest) {
-    // Triggers ONLY on EC2 production to verify the rollback safety net
-    return res.status(500).json({ status: "error", reason: "simulated rollback drill" });
-  }
+  // below code is for sever smoke test on ec2 rollback.env mechanism
+  // const isTest = process.env.DATABASE_URL?.includes("test");
+  // if (!isTest) {
+  //   // Triggers ONLY on EC2 production to verify the rollback safety net
+  //   return res.status(500).json({ status: "error", reason: "simulated rollback drill" });
+  // }
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
@@ -51,13 +52,13 @@ const startServer = async () => {
     });
 
     const shutdown = async () => {
-      console.log('Shutting down gracefully...');
+      console.log("Shutting down gracefully...");
       server.close();
       await pool.end();
       process.exit(0);
     };
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
+    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown);
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
