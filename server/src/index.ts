@@ -24,8 +24,13 @@ app.use(
 );
 app.use(express.json());
 
-// Healthcheck
+// Healthcheck — Stage 8 simulated crash (passes in CI tests, fails on EC2)
 app.get("/api/health", (req, res) => {
+  const isTest = process.env.DATABASE_URL?.includes("test");
+  if (!isTest) {
+    // Triggers ONLY on EC2 production to verify the rollback safety net
+    return res.status(500).json({ status: "error", reason: "simulated rollback drill" });
+  }
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

@@ -55,7 +55,11 @@ export function useTodos() {
     setError(null);
     try {
       const queryFilters = {
-        ...filters,
+        completed: filters.completed,
+        priority: filters.priority,
+        category: filters.category,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
         search: debouncedSearch,
       };
       const data = await todoApi.getTodos(queryFilters, controller.signal);
@@ -73,14 +77,17 @@ export function useTodos() {
         setLoading(false);
       }
     }
-  }, [filters, debouncedSearch, fetchStats]);
+  }, [debouncedSearch, fetchStats, filters.category, filters.completed, filters.priority, filters.sortBy, filters.sortOrder]);
 
   useEffect(() => {
-    fetchTodos();
+    async function load() {
+      await fetchTodos();
+    }
+    load();
     return () => {
       abortRef.current?.abort();
     };
-  }, [debouncedSearch, filters.completed, filters.priority, filters.sortBy, filters.sortOrder]);
+  }, [fetchTodos]);
 
   const createTodo = async (input: CreateTodoInput) => {
     try {
