@@ -3,7 +3,7 @@
 case 1: running the server as it is but running the client build as docker container and it working.
 COMMANDS:
 docker build -t todo-client:lab ./client
-docker run --rm --name todo-client-lab -p 3000:80 todo-client:lab
+docker run --rm --name todo-client-lab -p 3000:3000 todo-client:lab
 docker stop todo-client-lab
 
 case 2: Server is running in terminal but this time the todo-client-lab is running via docker-compose.yml
@@ -29,5 +29,5 @@ docker compose down
 
 Case 6: When testing the app without touching the NEON db but postgres-alpine image. -v is to scrap old and use new volume every time
 COMMANDS:
-docker compose -f docker-compose.test.yml up -d --wait
-docker compose -f docker-compose.test.yml down -v
+docker compose -f test-compose.yaml up -d --wait
+docker compose -f test-compose.yaml down -v

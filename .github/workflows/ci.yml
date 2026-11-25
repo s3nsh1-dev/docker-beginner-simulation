@@ -252,7 +252,7 @@ jobs:
 
       - name: Copy production Compose contract to EC2
         run: |
-          scp docker-compose.prod.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/todo-app/docker-compose.prod.yml
+          scp prod-compose.yaml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/todo-app/prod-compose.yaml
 
       - name: Execute remote deployment & healthcheck
         env:
@@ -263,7 +263,7 @@ jobs:
             set -euo pipefail
             cd /opt/todo-app
 
-            trap 'echo "Deployment failed, triggering rollback..."; if [ -f rollback.env ]; then cp rollback.env release.env; docker compose -f docker-compose.prod.yml --env-file release.env up -d; echo "Rolled back to previous known-good tag."; fi' ERR
+            trap 'echo "Deployment failed, triggering rollback..."; if [ -f rollback.env ]; then cp rollback.env release.env; docker compose -f prod-compose.yaml --env-file release.env up -d; echo "Rolled back to previous known-good tag."; fi' ERR
 
             # 1. Preserve current tag for rollback
             if [ -f release.env ]; then
@@ -286,10 +286,10 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
             # 4. Pre-pull images while current stack is still serving traffic
-            docker compose -f docker-compose.prod.yml --env-file release.env pull
+            docker compose -f prod-compose.yaml --env-file release.env pull
 
             # 5. Recreate containers with zero downtime
-            docker compose -f docker-compose.prod.yml --env-file release.env up -d --remove-orphans
+            docker compose -f prod-compose.yaml --env-file release.env up -d --remove-orphans
 
             # 6. Automated healthcheck polling (Tier 3 deep check)
             echo "Polling live application healthcheck..."
@@ -305,7 +305,7 @@ jobs:
             echo "Healthcheck failed! Triggering automatic rollback..."
             if [ -f rollback.env ]; then
               cp rollback.env release.env
-              docker compose -f docker-compose.prod.yml --env-file release.env up -d
+              docker compose -f prod-compose.yaml --env-file release.env up -d
               echo "Rolled back to previous known-good tag."
             fi
             exit 1

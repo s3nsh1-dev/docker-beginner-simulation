@@ -91,7 +91,7 @@
           <input type="checkbox" class="mt-1 rounded accent-blue-500 pointer-events-none" id="chk-2">
           <div class="flex-1">
             <div class="text-xs text-slate-400 font-mono">03. Networking</div>
-            <div class="text-sm font-semibold">Nginx Reverse Proxy</div>
+            <div class="text-sm font-semibold">Vite Preview Proxy</div>
           </div>
         </button>
 
@@ -166,9 +166,9 @@
                   <span>✅ Industry Production Flow</span>
                 </h3>
                 <ul class="space-y-2 text-xs list-disc list-inside text-slate-300">
-                  <li><strong>Only Nginx (port 80/443)</strong> is exposed to the internet.</li>
+                  <li><strong>Only the Client Vite Preview container (port 80/443)</strong> is exposed to the internet.</li>
                   <li>Server port 5000 is <em>internal only</em> on the Docker network.</li>
-                  <li>Client requests relative path <code class="text-emerald-300">/api/todos</code>; Nginx reverse proxies it.</li>
+                  <li>Client requests relative path <code class="text-emerald-300">/api/todos</code>; Vite preview's proxy forwards it.</li>
                   <li>No CORS headaches, unified SSL termination, single domain.</li>
                 </ul>
               </div>
@@ -184,7 +184,7 @@
 ┌────────────────────────────────────────────────────────┐
 │ AWS EC2 Host                                           │
 │   ┌────────────────────────────────────────────────┐   │
-│   │ Nginx (Client Container)                       │   │
+│   │ Vite Preview (Client Container)                │   │
 │   │   ├── Serves React Static Bundle (/dist)       │   │
 │   │   └── Reverse Proxies /api/* ─────────────────┐│   │
 │   └───────────────────────────────────────────────│┘   │
@@ -244,12 +244,12 @@
           </div>
         </div>
 
-        <!-- TAB 2: NGINX REVERSE PROXY -->
+        <!-- TAB 2: VITE PREVIEW PROXY -->
         <div id="tab-content-2" class="tab-content hidden bg-[var(--card,#1e293b)] border border-[var(--border,#334155)] rounded-2xl p-6 shadow-md space-y-6">
           <div class="flex items-center justify-between border-b border-slate-700 pb-4">
             <div>
               <span class="text-xs font-mono text-blue-400">MODULE 03</span>
-              <h2 class="text-xl font-bold">Networking: Nginx Reverse Proxy & Unifying Ports</h2>
+              <h2 class="text-xl font-bold">Networking: Vite Preview Proxy & Unifying Ports</h2>
             </div>
             <button onclick="toggleCompleted(2)" class="mark-btn text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:border-emerald-500 transition-colors">
               Mark Completed
@@ -258,35 +258,25 @@
 
           <div class="space-y-4 text-sm leading-relaxed text-slate-300">
             <p>
-              Right now, your client calls <code class="text-red-400 font-mono">http://localhost:5000/api/todos</code>. To make this production-ready:
+              Right now, your client calls <code class="text-red-400 font-mono">http://localhost:5000/api/todos</code>. To make this container-ready:
             </p>
             <ol class="list-decimal list-inside space-y-1 text-xs text-slate-300">
-              <li>Configure Nginx to proxy any request starting with <code class="text-emerald-300 font-mono">/api/</code> to the Docker internal service <code class="text-emerald-300 font-mono">http://server:5000</code>.</li>
+              <li>Configure <code class="text-emerald-300 font-mono">preview.proxy</code> in <code class="text-blue-400">client/vite.config.ts</code> to forward <code class="text-emerald-300 font-mono">/api</code> to <code class="text-emerald-300 font-mono">API_TARGET</code> (<code class="text-emerald-300 font-mono">http://server:5000</code> in Docker).</li>
               <li>Change client's API base to relative path <code class="text-emerald-300 font-mono">/api/todos</code>.</li>
               <li>Stop publishing port 5000 to the public host in Docker Compose.</li>
             </ol>
 
-            <h3 class="font-semibold text-slate-100 text-xs">1. Update <code class="text-blue-400">client/nginx.conf</code>:</h3>
+            <h3 class="font-semibold text-slate-100 text-xs">1. Update <code class="text-blue-400">client/vite.config.ts</code>:</h3>
             <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
-              server {
-              <br>&nbsp;&nbsp;listen 80;
-              <br>&nbsp;&nbsp;server_name _;
-              <br>&nbsp;&nbsp;root /usr/share/nginx/html;
-              <br>&nbsp;&nbsp;index index.html;
-              <br>
-              <span class="diff-add">+&nbsp;&nbsp;# Forward /api/ requests to Express backend</span>
-              <span class="diff-add">+&nbsp;&nbsp;location /api/ {</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_pass http://server:5000;</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_http_version 1.1;</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header Host $host;</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Real-IP $remote_addr;</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span>
-              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;proxy_set_header X-Forwarded-Proto $scheme;</span>
-              <span class="diff-add">+&nbsp;&nbsp;}</span>
-              <br>&nbsp;&nbsp;location / {
-              <br>&nbsp;&nbsp;&nbsp;&nbsp;try_files $uri $uri/ /index.html;
-              <br>&nbsp;&nbsp;}
-              <br>}
+              <span class="diff-add">+ preview: {</span>
+              <span class="diff-add">+&nbsp;&nbsp;port: 3000,</span>
+              <span class="diff-add">+&nbsp;&nbsp;strictPort: true,</span>
+              <span class="diff-add">+&nbsp;&nbsp;host: true,</span>
+              <span class="diff-add">+&nbsp;&nbsp;allowedHosts: true,</span>
+              <span class="diff-add">+&nbsp;&nbsp;proxy: {</span>
+              <span class="diff-add">+&nbsp;&nbsp;&nbsp;&nbsp;'/api': { target: process.env.API_TARGET || 'http://localhost:5000', changeOrigin: true },</span>
+              <span class="diff-add">+&nbsp;&nbsp;},</span>
+              <span class="diff-add">+ },</span>
             </div>
 
             <h3 class="font-semibold text-slate-100 text-xs">2. Update <code class="text-blue-400">client/src/services/api.ts</code>:</h3>
@@ -295,7 +285,7 @@
               <span class="diff-add">+ const API_BASE = '/api/todos';</span>
             </div>
 
-            <h3 class="font-semibold text-slate-100 text-xs">3. Remove public port in <code class="text-blue-400">docker-compose.yml</code>:</h3>
+            <h3 class="font-semibold text-slate-100 text-xs">3. Remove public port in <code class="text-blue-400">compose.yaml</code>:</h3>
             <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
               &nbsp;&nbsp;server:
               <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./server
@@ -467,7 +457,7 @@
               <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
                 <span class="font-semibold text-white text-xs block mb-1">2. Docker Log Rotation (Prevent Disk Fill)</span>
                 <p class="text-xs text-slate-400">
-                  On EC2, containers that run for months will fill up your EBS volume with logs if unconfigured. Add log rotation to <code class="font-mono text-emerald-400">docker-compose.yml</code>:
+                  On EC2, containers that run for months will fill up your EBS volume with logs if unconfigured. Add log rotation to <code class="font-mono text-emerald-400">compose.yaml</code>:
                 </p>
                 <div class="bg-slate-950 p-2 mt-2 rounded border border-slate-800 font-mono text-xs text-slate-300">
                   logging:
@@ -490,7 +480,7 @@
               <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
                 <span class="font-semibold text-white text-xs block mb-1">4. SSL / HTTPS Setup</span>
                 <p class="text-xs text-slate-400">
-                  Attach an Elastic IP to your EC2 instance and point your domain (via Route53/Cloudflare). Run Certbot with Nginx to obtain a free Let's Encrypt certificate, or place an AWS Application Load Balancer (ALB) with AWS Certificate Manager in front.
+                  Attach an Elastic IP to your EC2 instance and point your domain (via Route53/Cloudflare). Place an AWS Application Load Balancer (ALB) with AWS Certificate Manager (ACM) or Cloudflare SSL in front of your EC2 instance.
                 </p>
               </div>
             </div>

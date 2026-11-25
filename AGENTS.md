@@ -1,1 +1,1 @@
-when i am done with the project and start doing deployment. remind to convert this project in pnpm monorepo but if project still incomplete or in learning phase then do not mention this ever.
+No versbose replies and answers and content genreation. be concise and explain all thing being accurate as what content need if the content need more words and diagrams use it if not then be brief.

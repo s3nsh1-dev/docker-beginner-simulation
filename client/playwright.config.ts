@@ -22,7 +22,7 @@ export default defineConfig({
 
   use: {
     // THE repoint: every relative page.goto('/api...') in the specs
-    // now resolves against the nginx container, not Vite.
+    // now resolves against the client container (vite preview), not Vite dev server.
     baseURL: "http://localhost:3000",
     trace: "on-first-retry", // record the failing retry for post-mortem
     headless: true, // real engine, no visible window
@@ -41,7 +41,7 @@ export default defineConfig({
     // Contract: "make sure http://localhost:3000 answers before testing."
     // Already up (Part 1 muscle memory)? Command skipped.
     // Down? This boots the whole stack, waits for healthchecks, then tests.
-    command: "docker compose -f ../docker-compose.test.yml up -d --wait",
+    command: "docker compose -f ../test-compose.yaml up -d --wait",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 120000, // 2 min: room for image builds on a cold machine
