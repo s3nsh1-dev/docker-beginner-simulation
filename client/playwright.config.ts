@@ -22,7 +22,7 @@ export default defineConfig({
 
   use: {
     // THE repoint: every relative page.goto('/api...') in the specs
-    // now resolves against the nginx container, not Vite.
+    // now resolves against the client container (vite preview), not Vite dev server.
     baseURL: "http://localhost:3000",
     trace: "on-first-retry", // record the failing retry for post-mortem
     headless: true, // real engine, no visible window

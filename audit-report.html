@@ -504,8 +504,8 @@
           </div>
           <span class="text-xs text-slate-500 font-mono">DevOps • Networking</span>
         </div>
-        <h3 class="text-base font-bold text-white">Network Isolation Crashed Nginx on Upstream Resolution</h3>
-        <p class="text-xs text-slate-400 mt-1"><strong class="text-slate-300">Root Cause:</strong> Independent compose files created separate isolated bridge networks, causing host not found errors on boot.</p>
+        <h3 class="text-base font-bold text-white">Network Isolation Broke Client Proxy Upstream Resolution</h3>
+        <p class="text-xs text-slate-400 mt-1"><strong class="text-slate-300">Root Cause:</strong> Independent compose files created separate isolated bridge networks, causing host not found errors when the client proxy forwarded requests to <code class="text-slate-200">server</code>.</p>
         <div class="mt-3 bg-[#0a0f1d] rounded-lg p-3 border border-slate-800/80">
           <div class="text-[11px] font-semibold text-slate-400 mb-1">Applied Fix:</div>
           <span class="diff-add">+ networks: default: name: todo-lab-net (added to both lab compose definitions)</span>
@@ -554,16 +554,16 @@
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide badge-medium">Medium</span>
             <span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide badge-fixed">✅ Resolved</span>
-            <span class="text-xs font-mono text-slate-400">client/nginx.conf:8</span>
+            <span class="text-xs font-mono text-slate-400">client/vite.config.ts:21</span>
           </div>
-          <span class="text-xs text-slate-500 font-mono">DevOps • Nginx</span>
+          <span class="text-xs text-slate-500 font-mono">DevOps • Vite Preview</span>
         </div>
-        <h3 class="text-base font-bold text-white">Static Nginx DNS Resolution Causes 502 Bad Gateway on Server Recreate</h3>
-        <p class="text-xs text-slate-400 mt-1"><strong class="text-slate-300">Root Cause:</strong> Nginx statically cached IP address of the server container once at boot, breaking reverse proxying when server IP changed.</p>
+        <h3 class="text-base font-bold text-white">Configurable Upstream Target & Host Allowance for Containerized Preview</h3>
+        <p class="text-xs text-slate-400 mt-1"><strong class="text-slate-300">Root Cause:</strong> Vite dev config hardcoded <code class="text-slate-200">http://localhost:5000</code> and lacked a <code class="text-slate-200">preview</code> block, breaking <code class="text-slate-200">/api/*</code> forwarding and non-localhost EC2 host headers inside Docker.</p>
         <div class="mt-3 bg-[#0a0f1d] rounded-lg p-3 border border-slate-800/80">
           <div class="text-[11px] font-semibold text-slate-400 mb-1">Applied Fix:</div>
-          <span class="diff-add">+ resolver 127.0.0.11 valid=10s ipv6=off;</span>
-          <span class="diff-add">+ set $backend "http://server:5000"; proxy_pass $backend;</span>
+          <span class="diff-add">+ Added preview block in client/vite.config.ts (host: true, allowedHosts: true)</span>
+          <span class="diff-add">+ Proxied /api via process.env.API_TARGET || 'http://localhost:5000' (set to http://server:5000 in Dockerfile)</span>
         </div>
       </div>
 
