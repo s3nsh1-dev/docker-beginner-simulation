@@ -41,7 +41,7 @@ export default defineConfig({
     // Contract: "make sure http://localhost:3000 answers before testing."
     // Already up (Part 1 muscle memory)? Command skipped.
     // Down? This boots the whole stack, waits for healthchecks, then tests.
-    command: "docker compose -f ../docker-compose.test.yml up -d --wait",
+    command: "docker compose -f ../test-compose.yaml up -d --wait",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 120000, // 2 min: room for image builds on a cold machine

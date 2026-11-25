@@ -3,6 +3,6 @@
   "private": true,
   "packageManager": "pnpm@12.4.2",
   "scripts": {
-    "test:e2e": "sh -c 'set -eu; cleanup() { docker compose -f docker-compose.test.yml down --volumes --remove-orphans; }; trap cleanup EXIT; docker compose -f docker-compose.test.yml up -d --build --wait; pnpm --dir client run test:e2e'"
+    "test:e2e": "sh -c 'set -eu; cleanup() { docker compose -f test-compose.yaml down --volumes --remove-orphans; }; trap cleanup EXIT; docker compose -f test-compose.yaml up -d --build --wait; pnpm --dir client run test:e2e'"
   }
 }

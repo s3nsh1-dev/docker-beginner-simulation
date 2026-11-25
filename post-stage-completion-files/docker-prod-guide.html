@@ -285,7 +285,7 @@
               <span class="diff-add">+ const API_BASE = '/api/todos';</span>
             </div>
 
-            <h3 class="font-semibold text-slate-100 text-xs">3. Remove public port in <code class="text-blue-400">docker-compose.yml</code>:</h3>
+            <h3 class="font-semibold text-slate-100 text-xs">3. Remove public port in <code class="text-blue-400">compose.yaml</code>:</h3>
             <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-xs font-mono overflow-x-auto">
               &nbsp;&nbsp;server:
               <br>&nbsp;&nbsp;&nbsp;&nbsp;build: ./server
@@ -457,7 +457,7 @@
               <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
                 <span class="font-semibold text-white text-xs block mb-1">2. Docker Log Rotation (Prevent Disk Fill)</span>
                 <p class="text-xs text-slate-400">
-                  On EC2, containers that run for months will fill up your EBS volume with logs if unconfigured. Add log rotation to <code class="font-mono text-emerald-400">docker-compose.yml</code>:
+                  On EC2, containers that run for months will fill up your EBS volume with logs if unconfigured. Add log rotation to <code class="font-mono text-emerald-400">compose.yaml</code>:
                 </p>
                 <div class="bg-slate-950 p-2 mt-2 rounded border border-slate-800 font-mono text-xs text-slate-300">
                   logging:

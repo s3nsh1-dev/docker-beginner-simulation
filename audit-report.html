@@ -536,7 +536,7 @@
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide badge-medium">Medium</span>
             <span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide badge-fixed">✅ Resolved</span>
-            <span class="text-xs font-mono text-slate-400">docker-compose.yml:16</span>
+            <span class="text-xs font-mono text-slate-400">compose.yaml:16</span>
           </div>
           <span class="text-xs text-slate-500 font-mono">DevOps • Standardization</span>
         </div>
@@ -600,7 +600,7 @@
         <p class="text-xs text-slate-400 mt-1"><strong class="text-slate-300">Root Cause:</strong> Server container had no Tini init system to forward signals and reap zombie processes.</p>
         <div class="mt-3 bg-[#0a0f1d] rounded-lg p-3 border border-slate-800/80">
           <div class="text-[11px] font-semibold text-slate-400 mb-1">Applied Fix:</div>
-          <span class="diff-add">+ init: true (added to server service in docker-compose.yml, prod, and test)</span>
+          <span class="diff-add">+ init: true (added to server service in compose.yaml, prod, and test)</span>
         </div>
       </div>
 
